@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36414.22 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModernForm", "ModernForm\ModernForm.csproj", "{277661A7-E403-4AC3-92E0-60817585B0FF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModernFormTest", "ModernFormTest\ModernFormTest.csproj", "{8377A7EE-E605-414B-9EDD-05C695CCC775}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{277661A7-E403-4AC3-92E0-60817585B0FF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{277661A7-E403-4AC3-92E0-60817585B0FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{277661A7-E403-4AC3-92E0-60817585B0FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{277661A7-E403-4AC3-92E0-60817585B0FF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8377A7EE-E605-414B-9EDD-05C695CCC775}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8377A7EE-E605-414B-9EDD-05C695CCC775}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8377A7EE-E605-414B-9EDD-05C695CCC775}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8377A7EE-E605-414B-9EDD-05C695CCC775}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {18157899-4A1B-4A7B-BCC5-D93DE79D9CAE}
+	EndGlobalSection
+EndGlobal
