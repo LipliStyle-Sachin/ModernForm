@@ -8,6 +8,11 @@ namespace Lps
         {
             InitializeComponent();
 
+
+            // 1) テーマ固定（ダーク固定にしたい場合）
+            this.Theme = ThemeMode.System;
+
+
             //■1. タイトルバー関連部品をデザイナーの通り用意し、このメソッドで上位に渡す。
             AttachChrome(
                 titleBar: this.titleBar,
@@ -19,7 +24,7 @@ namespace Lps
                 appIconMenu: this.ctxAppIcon              // 無ければ null 可
             );
 
-            //■2. ウィンドウの外観を設定する。
+            //■2. ウィンドウの外枠の外観を設定する。
 
             //Windowの縁取り、影、グローの設定。これらの値はデザイナーで設定！
             //AccentActive           : アクティブ時の発光色
@@ -58,6 +63,25 @@ namespace Lps
 
             // アイコンに画像を設定せずに、以下の記述をすることでアプリケーションのアイコンを自動的に取得してくれる
             //appIcon.Image = this.Icon?.ToBitmap() ?? SystemIcons.Application.ToBitmap();
+
+            //■4. ウインドウ外観の設定
+            // 4-1) テーマ固定（ダーク固定にしたい場合）
+            //this.Theme = ThemeMode.System;（既定）
+            //this.Theme = ThemeMode.Light;
+            //this.Theme = ThemeMode.Dark;
+
+            // 4-2) Backdrop と角丸
+            //this.Backdrop = BackdropKind.Mica;   // None / Mica / Acrylic / Tabbed / Auto
+            //this.Corner = CornerStyle.Round;   // Default / NoRound / Round / RoundSmall
+
+            // 4-3) 配色を少しカスタム（任意）
+            this.DarkBackColor = Color.FromArgb(28, 28, 28);
+            this.DarkForeColor = Color.Gainsboro;
+
+
+            //■5 白に変更された文字色をリセットする
+            //this.ResetChildForeColorToDefault();
+
         }
     }
 }

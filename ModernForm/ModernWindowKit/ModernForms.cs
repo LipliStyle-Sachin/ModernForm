@@ -56,6 +56,51 @@ namespace Lps.ModernWindowKit
         private long _tbLastDownTicks;
         private Point _tbLastDownScreen;
 
+        public enum BackdropKind { Auto, None, Mica, Acrylic, Tabbed }
+
+        [Browsable(true), Category("Window/Appearance"), DefaultValue(BackdropKind.Mica)]
+        public BackdropKind Backdrop { get; set; } = BackdropKind.Mica;
+
+        public enum CornerStyle { Default, NoRound, Round, RoundSmall }
+
+        [Browsable(true), Category("Window/Appearance"), DefaultValue(CornerStyle.Round)]
+        public CornerStyle Corner { get; set; } = CornerStyle.Round;
+
+        // デフォルト値は従来の ApplyTheme と同等
+        [Browsable(true), Category("Window/Appearance")]
+        public Color LightBackColor { get; set; } = Color.White;
+        [Browsable(true), Category("Window/Appearance")]
+        public Color LightForeColor { get; set; } = Color.Black;
+
+        [Browsable(true), Category("Window/Appearance")]
+        public Color DarkBackColor { get; set; } = Color.FromArgb(32, 32, 32);
+        [Browsable(true), Category("Window/Appearance")]
+        public Color DarkForeColor { get; set; } = Color.Gainsboro;
+
+        public enum ThemeMode { System, Light, Dark }
+
+        private ThemeMode _theme = ThemeMode.System;
+
+        [Browsable(true), Category("Window/Appearance"), DefaultValue(ThemeMode.System)]
+        public ThemeMode Theme
+        {
+            get => _theme;
+            set
+            {
+                if (_theme == value) return;
+                _theme = value;
+                if (!IsDesignMode()) SyncTheme(); // 変更即反映
+            }
+        }
+
+        [Browsable(true), Category("Window/Appearance"), DefaultValue(true)]
+        public bool ThemeMenus { get; set; } = true;
+
+        [Browsable(true), Category("Window/Appearance"), DefaultValue(false)]
+        public bool AffectChildControlForeColor { get; set; } = false;
+
+
+
         #endregion
 
         #region State / Options
@@ -160,8 +205,22 @@ namespace Lps.ModernWindowKit
 
             TryEnableDwmShadow();
 
+            // ▼ ここは「Theme」を尊重
+            SyncTheme();
+
             if (FollowSystemTheme) SyncThemeWithSystem();
             HookThemeChange();
+        }
+
+        private void SyncTheme()
+        {
+            bool dark = Theme switch
+            {
+                ThemeMode.Light => false,
+                ThemeMode.Dark => true,
+                _ => IsSystemDark(), // System
+            };
+            ApplyTheme(dark);
         }
 
         /// <summary>破棄時：フック解除。</summary>
@@ -417,6 +476,21 @@ namespace Lps.ModernWindowKit
         public void SetGlowIceCyan() => SetGlowPreset(GlowPreset.IceCyan);
         public void SetGlowSlateBlue() => SetGlowPreset(GlowPreset.SlateBlue);
 
+        /// <summary>
+        /// 一度白に変わったコントロールを既定色へ戻したい時のユーティリティ
+        /// </summary>
+        /// <param name="root"></param>
+        public void ResetChildForeColorToDefault(Control? root = null)
+        {
+            root ??= this;
+            foreach (Control c in root.Controls)
+            {
+                if (c is not MenuStrip && c is not StatusStrip && c is not ToolStrip)
+                    c.ForeColor = SystemColors.ControlText; // 既定の前景色へ
+
+                if (c.HasChildren) ResetChildForeColorToDefault(c);
+            }
+        }
         #endregion
 
         #region Internal Wiring
@@ -515,18 +589,58 @@ namespace Lps.ModernWindowKit
         }
 
         /// <summary>ダーク/ライトで背景色などを切替（必要なら継承で上書き）。</summary>
-        protected virtual void ApplyTheme(bool dark)
+        protected void ApplyTheme(bool dark)
         {
+            // ダークモード切替（既存）
             SetImmersiveDarkMode(Handle, dark);
-            if (UseRoundedCorners) SetRoundedCorners(Handle, DwmWindowCornerPreference.DWMWCP_ROUND);
-            if (UseMica) SetBackdrop(Handle, DwmSystemBackdropType.DWMSBT_MICA);
 
-            var bg = dark ? Color.FromArgb(32, 32, 32) : Color.White;
-            var fg = dark ? Color.Gainsboro : Color.Black;
-            BackColor = bg; ForeColor = fg;
+            // 角丸（公開 CornerStyle を尊重）
+            if (UseRoundedCorners)
+            {
+                var pref = Corner switch
+                {
+                    CornerStyle.NoRound => (DwmWindowCornerPreference)1,
+                    CornerStyle.Round => (DwmWindowCornerPreference)2,
+                    CornerStyle.RoundSmall => (DwmWindowCornerPreference)3,
+                    _ => (DwmWindowCornerPreference)0,
+                };
+                SetRoundedCorners(Handle, pref);
+            }
+
+            // Backdrop（UseMica を後方互換として考慮）
+            var type = Backdrop switch
+            {
+                BackdropKind.None => DwmSystemBackdropType.DWMSBT_NONE,
+                BackdropKind.Mica => DwmSystemBackdropType.DWMSBT_MICA,
+                BackdropKind.Acrylic => DwmSystemBackdropType.DWMSBT_ACRYLIC,
+                BackdropKind.Tabbed => DwmSystemBackdropType.DWMSBT_TABBED,
+                BackdropKind.Auto => (UseMica ? DwmSystemBackdropType.DWMSBT_MICA : DwmSystemBackdropType.DWMSBT_NONE),
+                _ => DwmSystemBackdropType.DWMSBT_NONE,
+            };
+            SetBackdrop(Handle, type);
+
+            // 配色（カスタム可能）
+            var bg = dark ? DarkBackColor : LightBackColor;
+           
+            BackColor = bg;
+
+            //2025/09/09
+            //文字色を反映させない
+            // var fg = dark ? DarkForeColor : LightForeColor;
+            //ForeColor = fg;
+
+            ApplyMenuThemeDeep(this, dark);
+
+            if (AffectChildControlForeColor)
+            {
+                var fore = dark ? Color.Gainsboro : Color.Black;
+                ApplyChildForeColor(this, fore);
+            }
+
 
             Invalidate();
         }
+
 
         private static void SetImmersiveDarkMode(IntPtr hWnd, bool enabled)
         {
@@ -547,8 +661,9 @@ namespace Lps.ModernWindowKit
         private void UnhookThemeChange() => SystemEvents.UserPreferenceChanged -= SystemEvents_UserPreferenceChanged;
         private void SystemEvents_UserPreferenceChanged(object? sender, UserPreferenceChangedEventArgs e)
         {
-            if (e.Category == UserPreferenceCategory.General || e.Category == UserPreferenceCategory.Color)
-                BeginInvoke(new Action(SyncThemeWithSystem));
+            if (Theme == ThemeMode.System &&
+                (e.Category == UserPreferenceCategory.General || e.Category == UserPreferenceCategory.Color))
+                BeginInvoke(new Action(SyncTheme));
         }
 
         #endregion
@@ -641,5 +756,140 @@ namespace Lps.ModernWindowKit
 
 
         #endregion
+
+
+
+        /// <summary>
+        /// ルート配下の MenuStrip / ToolStrip / StatusStrip / ContextMenuStrip に反映
+        /// </summary>
+        /// <param name="root"></param>
+        /// <param name="dark"></param>
+        private void ApplyMenuThemeDeep(Control root, bool dark)
+        {
+            if (!ThemeMenus || root == null) return;
+
+            // グローバル既定（ManagerRenderMode の時に効く）
+            ToolStripManager.Renderer = new ToolStripProfessionalRenderer(dark ? new DarkColorTable() : new LightColorTable());
+
+            void FixToolStrip(ToolStrip ts)
+            {
+                ts.RenderMode = ToolStripRenderMode.ManagerRenderMode; // これが重要
+                ts.BackColor = dark ? Color.FromArgb(32, 32, 32) : Color.White;
+                ts.ForeColor = dark ? Color.Gainsboro : Color.Black;
+                foreach (ToolStripItem it in ts.Items)
+                    ApplyItemFore(it, dark ? Color.Gainsboro : Color.Black);
+            }
+
+            // 子コントロールを再帰
+            void Walk(Control c)
+            {
+                if (c is MenuStrip ms) FixToolStrip(ms);
+                else if (c is StatusStrip ss) FixToolStrip(ss);
+                else if (c is ToolStrip ts) FixToolStrip(ts);
+
+                // ContextMenuStrip は Control にぶら下がるので個別設定
+                if (c.ContextMenuStrip is ContextMenuStrip cms)
+                {
+                    cms.Renderer = new ToolStripProfessionalRenderer(dark ? new DarkColorTable() : new LightColorTable());
+                    cms.BackColor = dark ? Color.FromArgb(36, 36, 36) : Color.White;
+                    cms.ForeColor = dark ? Color.Gainsboro : Color.Black;
+                    foreach (ToolStripItem it in cms.Items)
+                        ApplyItemFore(it, dark ? Color.Gainsboro : Color.Black);
+                }
+
+                foreach (Control child in c.Controls) Walk(child);
+            }
+
+            Walk(this);
+        }
+
+        private void ApplyItemFore(ToolStripItem item, Color fore)
+        {
+            item.ForeColor = fore;
+            if (item is ToolStripDropDownItem ddi && ddi.HasDropDownItems)
+                foreach (ToolStripItem sub in ddi.DropDownItems)
+                    ApplyItemFore(sub, fore);
+        }
+
+        private void ApplyChildForeColor(Control root, Color fore)
+        {
+            foreach (Control c in root.Controls)
+            {
+                // MenuStrip/StatusStrip/ToolStripはレンダラー側で色適用するため除外
+                if (c is not MenuStrip && c is not StatusStrip && c is not ToolStrip)
+                    c.ForeColor = fore;
+
+                if (c.HasChildren) ApplyChildForeColor(c, fore);
+            }
+        }
+
+        private sealed class DarkColorTable : ProfessionalColorTable
+        {
+            public DarkColorTable()
+            {
+                // システム色を使わず、こちらで指定する色を使う
+                this.UseSystemColors = false;
+            }
+
+            public override Color MenuStripGradientBegin => Color.FromArgb(32, 32, 32);
+            public override Color MenuStripGradientEnd => Color.FromArgb(32, 32, 32);
+
+            public override Color ToolStripGradientBegin => Color.FromArgb(40, 40, 40);
+            public override Color ToolStripGradientMiddle => Color.FromArgb(40, 40, 40);
+            public override Color ToolStripGradientEnd => Color.FromArgb(40, 40, 40);
+
+            public override Color ToolStripDropDownBackground => Color.FromArgb(36, 36, 36);
+            public override Color ImageMarginGradientBegin => Color.FromArgb(36, 36, 36);
+            public override Color ImageMarginGradientMiddle => Color.FromArgb(36, 36, 36);
+            public override Color ImageMarginGradientEnd => Color.FromArgb(36, 36, 36);
+
+            public override Color MenuItemBorder => Color.FromArgb(72, 72, 72);
+            public override Color MenuItemSelected => Color.FromArgb(60, 60, 60);
+            public override Color MenuItemSelectedGradientBegin => Color.FromArgb(60, 60, 60);
+            public override Color MenuItemSelectedGradientEnd => Color.FromArgb(60, 60, 60);
+
+            public override Color MenuItemPressedGradientBegin => Color.FromArgb(55, 55, 55);
+            public override Color MenuItemPressedGradientEnd => Color.FromArgb(55, 55, 55);
+
+            public override Color SeparatorDark => Color.FromArgb(80, 80, 80);
+            public override Color SeparatorLight => Color.FromArgb(80, 80, 80);
+
+            public override Color ToolStripBorder => Color.FromArgb(70, 70, 70);
+            public override Color ButtonSelectedBorder => Color.FromArgb(100, 100, 100);
+        }
+
+        private sealed class LightColorTable : ProfessionalColorTable
+        {
+            public LightColorTable()
+            {
+                this.UseSystemColors = false;
+            }
+
+            public override Color MenuStripGradientBegin => Color.White;
+            public override Color MenuStripGradientEnd => Color.White;
+
+            public override Color ToolStripGradientBegin => Color.FromArgb(245, 245, 245);
+            public override Color ToolStripGradientMiddle => Color.FromArgb(245, 245, 245);
+            public override Color ToolStripGradientEnd => Color.FromArgb(245, 245, 245);
+
+            public override Color ToolStripDropDownBackground => Color.White;
+            public override Color ImageMarginGradientBegin => Color.White;
+            public override Color ImageMarginGradientMiddle => Color.White;
+            public override Color ImageMarginGradientEnd => Color.White;
+
+            public override Color MenuItemBorder => Color.FromArgb(210, 210, 210);
+            public override Color MenuItemSelected => Color.FromArgb(230, 230, 230);
+            public override Color MenuItemSelectedGradientBegin => Color.FromArgb(230, 230, 230);
+            public override Color MenuItemSelectedGradientEnd => Color.FromArgb(230, 230, 230);
+
+            public override Color MenuItemPressedGradientBegin => Color.FromArgb(235, 235, 235);
+            public override Color MenuItemPressedGradientEnd => Color.FromArgb(235, 235, 235);
+
+            public override Color SeparatorDark => Color.FromArgb(220, 220, 220);
+            public override Color SeparatorLight => Color.FromArgb(220, 220, 220);
+
+            public override Color ToolStripBorder => Color.FromArgb(210, 210, 210);
+            public override Color ButtonSelectedBorder => Color.FromArgb(180, 180, 180);
+        }
     }
 }
