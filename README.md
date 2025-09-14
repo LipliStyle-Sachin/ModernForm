@@ -77,9 +77,46 @@ WinformsのFormをモダンにしたもの
 
 ## 5. 利用手順
 プロジェクトにこのプロジェクトのDLLまはたプロジェクトを参照設定する。
+### 1. 継承する
+```csharp
+public partial class MainForm : ModernForms
+{
+    public MainForm()
+    {
+        InitializeComponent();
+        SetThemePreset(ThemePreset.Graphite);
+    }
+}
+```
 
+### 2. コントロールを配置
+- フォームに以下を追加します：
+  - `MenuStrip`（タイトルバーに使用）  
+    - 左端にアプリアイコン用 `ToolStripLabel` など
+    - 右端に `ToolStripButton` ×3（最小化・最大化・閉じる）
+  - `Panel`（メインコンテンツ領域、`Dock=Fill`）
+  - 任意で `ContextMenuStrip`（アプリアイコンのメニューなど）
 
-### (1) 継承する
+### 3. AttachChrome で配線
+```csharp
+AttachChrome(
+    this.menuStrip1,
+    this.appIconItem,
+    this.btnMinimize, this.btnMaximize, this.btnClose,
+    this.panelContent,
+    this.contextMenuIcon
+);
+```
+
+### 4. テーマ切替
+```csharp
+SetThemePreset(ThemePreset.PaperWhite);
+SetGlowPreset(GlowPreset.SoftTeal);
+```
+---
+
+## 最小コード例
+
 ```csharp
 public partial class MainForm : ModernForms
 {
@@ -87,21 +124,27 @@ public partial class MainForm : ModernForms
     {
         InitializeComponent();
 
-        // テーマプリセット適用
+        AttachChrome(
+            this.menuStrip1,
+            this.appIconItem,
+            this.btnMinimize, this.btnMaximize, this.btnClose,
+            this.panelContent,
+            this.contextMenuIcon
+        );
+
+        FollowSystemTheme = true;
         SetThemePreset(ThemePreset.Graphite);
+        SetGlowPreset(GlowPreset.FluentAzure);
     }
 }
 ```
 
+---
 
-### (2) デザイナー準備（フォーム上のコントロール）
-- **2.1 タイトルバー（MenuStrip**  
-  例：menuStripTitle をフォーム上部に配置
-  左端にアプリアイコン用 ToolStripLabel（または ToolStripDropDownButton）を置く
-  右端に ToolStripButton ×3（最小化／最大化／閉じる）を置く（Alignment=Right 推奨）
+## License
+MIT License
 
-- **2.2 メイン領域（Content Host）**  
-  例：panelContent をフォーム全面に Dock=Fill
-- **2.3 アイコンメニュー（任意）**
-  例：contextMenuAppIcon をフォームに追加（「設定」「終了」等を配置）
+---
 
+## Author
+LipliStyle sachin (2009-2025)
