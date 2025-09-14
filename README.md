@@ -95,7 +95,7 @@ public partial class MainForm : ModernForms
 
 
 ### (2) デザイナー準備（フォーム上のコントロール）
-- **2.1 タイトルバー（MenuStrip）
+**2.1 タイトルバー（MenuStrip）
   例：menuStripTitle をフォーム上部に配置
   左端にアプリアイコン用 ToolStripLabel（または ToolStripDropDownButton）を置く
   右端に ToolStripButton ×3（最小化／最大化／閉じる）を置く（Alignment=Right 推奨）
