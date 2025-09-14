@@ -97,7 +97,9 @@ public partial class MainForm : ModernForms
   - `Panel`（メインコンテンツ領域、`Dock=Fill`）
   - 任意で `ContextMenuStrip`（アプリアイコンのメニューなど）
 
-### 3. AttachChrome で配線
+
+### 3. AttachChrome で配置したコントロールをセット
+最低限、ここまで実施すれば適用されます。
 ```csharp
 AttachChrome(
     this.menuStrip1,
@@ -109,6 +111,7 @@ AttachChrome(
 ```
 
 ### 4. テーマ切替
+あとは必要に応じて外観テーマを設定します。
 ```csharp
 SetThemePreset(ThemePreset.PaperWhite);
 SetGlowPreset(GlowPreset.SoftTeal);
@@ -131,10 +134,6 @@ public partial class MainForm : ModernForms
             this.panelContent,
             this.contextMenuIcon
         );
-
-        FollowSystemTheme = true;
-        SetThemePreset(ThemePreset.Graphite);
-        SetGlowPreset(GlowPreset.FluentAzure);
     }
 }
 ```
