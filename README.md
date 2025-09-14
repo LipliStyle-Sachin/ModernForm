@@ -12,6 +12,7 @@ WinformsのFormをモダンにしたもの
 - メニュー/コンテキストメニューのテーマ適用  
 - 拡張しやすい設計（プリセット呼び出しで即テーマ切替）  
 
+推奨 OS：Windows 11（Mica/Acrylic/角丸は OS 機能に依存）。Win10 でも実行可（該当効果は自動的に無効/代替）
 ---
 
 ## 2. 主な特徴
@@ -75,6 +76,8 @@ WinformsのFormをモダンにしたもの
 ---
 
 ## 5. 利用手順
+プロジェクトにこのプロジェクトのDLLまはたプロジェクトを参照設定する。
+
 
 ### (1) 継承する
 ```csharp
@@ -88,3 +91,18 @@ public partial class MainForm : ModernForms
         SetThemePreset(ThemePreset.Graphite);
     }
 }
+
+### (2) デザイナー準備（フォーム上のコントロール）
+2.1 タイトルバー（MenuStrip）
+例：menuStripTitle をフォーム上部に配置
+左端にアプリアイコン用 ToolStripLabel（または ToolStripDropDownButton）を置く
+右端に ToolStripButton ×3（最小化／最大化／閉じる）を置く（Alignment=Right 推奨）
+
+2.2 メイン領域（Content Host）
+例：panelContent をフォーム全面に Dock=Fill
+2.3 アイコンメニュー（任意）
+例：contextMenuAppIcon をフォームに追加（「設定」「終了」等を配置）
+
+
+
+
