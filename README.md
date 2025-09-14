@@ -91,6 +91,8 @@ public partial class MainForm : ModernForms
         SetThemePreset(ThemePreset.Graphite);
     }
 }
+```
+
 
 ### (2) デザイナー準備（フォーム上のコントロール）
 2.1 タイトルバー（MenuStrip）
