@@ -105,6 +105,9 @@ public partial class MainForm : ModernForms
 - **2.3 アイコンメニュー（任意）**
   例：contextMenuAppIcon をフォームに追加（「設定」「終了」等を配置）
 
+- **枠なしウィンドウ**  
+  標準の FormBorderStyle を非表示にし、モダンな見た目を実現。
+
 
 
 
