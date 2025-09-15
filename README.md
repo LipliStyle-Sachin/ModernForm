@@ -235,6 +235,13 @@ public partial class MainForm : ModernForms      // ← Form ではなく Modern
 
 
         //■5. 詳細カスタム設定
+        //各オプションの設定
+        //UseGripPanels = true;        // 掴みやすい透明グリップ
+        //ResizeBorderThickness = 12;  // 端のヒット幅（DPI対応）
+        //FollowSystemTheme = true;    // OSダークに追従
+        //UseRoundedCorners = true;    // 角丸
+        //UseMica = true;              // Mica（Win11 22H2+）
+
         //Backdrop と角丸
         //this.Backdrop = BackdropKind.Mica;   // None / Mica / Acrylic / Tabbed / Auto
         //this.Corner = CornerStyle.Round;   // Default / NoRound / Round / RoundSmall
