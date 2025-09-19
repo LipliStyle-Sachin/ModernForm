@@ -99,7 +99,16 @@ namespace Lps.ModernWindowKit
         [Browsable(true), Category("Window/Appearance"), DefaultValue(false)]
         public bool AffectChildControlForeColor { get; set; } = false;
 
-
+        public enum ThemePreset
+        {
+            SystemDefault,   // OS 追従（既定）
+            Graphite,        // 落ち着いた濃グレー + Mica
+            PaperWhite,      // まっさら白基調 + 角丸
+            OceanTeal,       // 青緑アクセント + Acrylic
+            Midnight,        // 深い紺 + Mica + 低めのグロー
+            AmberGlass,      // 琥珀アクセント + Acrylic
+            SlateBlueSoft,   // 青紫アクセント（既存 Glow と親和）
+        }
 
         #endregion
 
@@ -491,6 +500,101 @@ namespace Lps.ModernWindowKit
                 if (c.HasChildren) ResetChildForeColorToDefault(c);
             }
         }
+
+        public void SetThemePreset(ThemePreset preset)
+        {
+            switch (preset)
+            {
+                case ThemePreset.SystemDefault:
+                    Theme = ThemeMode.System;
+                    Backdrop = BackdropKind.Auto;         // 既存 UseMica を尊重
+                    Corner = CornerStyle.Round;
+                    // Glow は既定のままでもOK。整えたいなら：
+                    SetGlowFluentAzure();
+                    break;
+
+                case ThemePreset.Graphite:
+                    Theme = ThemeMode.Dark;
+                    Backdrop = BackdropKind.Mica;
+                    Corner = CornerStyle.RoundSmall;
+                    // 背景・前景（フォーム ForeColor は触らない運用）
+                    DarkBackColor = Color.FromArgb(28, 28, 28);
+                    DarkForeColor = Color.Gainsboro;
+                    // 枠の発光色（低彩度グレー）
+                    SetGlow(
+                        active: Color.FromArgb(90, 90, 90),
+                        inactive: Color.FromArgb(120, 90, 90, 90),
+                        borderActive: 200, borderInactive: 130,
+                        layers: 4, startActive: 50, startInactive: 28,
+                        falloffActive: 9, falloffInactive: 6
+                    );
+                    break;
+
+                case ThemePreset.PaperWhite:
+                    Theme = ThemeMode.Light;
+                    Backdrop = BackdropKind.None;          // まっさら
+                    Corner = CornerStyle.Round;
+                    LightBackColor = Color.White;
+                    LightForeColor = Color.Black;
+                    SetGlow(
+                        active: Color.FromArgb(180, 180, 180),
+                        inactive: Color.FromArgb(110, 180, 180, 180),
+                        borderActive: 210, borderInactive: 130,
+                        layers: 3, startActive: 40, startInactive: 22,
+                        falloffActive: 8, falloffInactive: 6
+                    );
+                    break;
+
+                case ThemePreset.OceanTeal:
+                    Theme = ThemeMode.System;              // OS 追従 + 強めのアクセント
+                    Backdrop = BackdropKind.Acrylic;
+                    Corner = CornerStyle.Round;
+                    SetGlowSoftTeal();                     // 既存プリセットを流用
+                    break;
+
+                case ThemePreset.Midnight:
+                    Theme = ThemeMode.Dark;
+                    Backdrop = BackdropKind.Mica;
+                    Corner = CornerStyle.Round;
+                    DarkBackColor = Color.FromArgb(20, 24, 36); // 深めの紺
+                    DarkForeColor = Color.Gainsboro;
+                    SetGlow(
+                        active: Color.FromArgb(64, 128, 255),   // うっすら青
+                        inactive: Color.FromArgb(120, 64, 128, 255),
+                        borderActive: 190, borderInactive: 120,
+                        layers: 3, startActive: 36, startInactive: 20,
+                        falloffActive: 8, falloffInactive: 6
+                    );
+                    break;
+
+                case ThemePreset.AmberGlass:
+                    Theme = ThemeMode.System;              // どちらでも馴染む
+                    Backdrop = BackdropKind.Acrylic;
+                    Corner = CornerStyle.Round;
+                    SetGlowSunsetAmber();                  // 既存プリセット（暖色）
+                    break;
+
+                case ThemePreset.SlateBlueSoft:
+                    Theme = ThemeMode.System;
+                    Backdrop = BackdropKind.Mica;
+                    Corner = CornerStyle.RoundSmall;
+                    SetGlowSlateBlue();                    // 既存プリセット（青紫）
+                    break;
+            }
+
+            // 即時反映
+            if (!IsDesignMode()) SyncTheme();
+        }
+
+        // ===== Theme Preset エイリアス =====
+        public void SetThemeSystemDefault() => SetThemePreset(ThemePreset.SystemDefault);
+        public void SetThemeGraphite() => SetThemePreset(ThemePreset.Graphite);
+        public void SetThemePaperWhite() => SetThemePreset(ThemePreset.PaperWhite);
+        public void SetThemeOceanTeal() => SetThemePreset(ThemePreset.OceanTeal);
+        public void SetThemeMidnight() => SetThemePreset(ThemePreset.Midnight);
+        public void SetThemeAmberGlass() => SetThemePreset(ThemePreset.AmberGlass);
+        public void SetThemeSlateBlueSoft() => SetThemePreset(ThemePreset.SlateBlueSoft);
+
         #endregion
 
         #region Internal Wiring
